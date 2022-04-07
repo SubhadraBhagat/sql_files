@@ -1,0 +1,291 @@
+show databases;
+CREATE DATABASE ONLINE_RESTAURANT_ORDERING_SYSTEM;
+
+use ONLINE_RESTAURANT_ORDERING_SYSTEM;
+
+show tables;
+
+CREATE TABLE Restaurant (
+    R_ID INT NOT NULL AUTO_INCREMENT,
+    R_Name VARCHAR(500) NOT NULL,
+    R_Description VARCHAR(500) NOT NULL DEFAULT 'Fusion cuisine',
+    R_Address VARCHAR(500) NOT NULL,
+    R_City VARCHAR(150) NOT NULL,
+    R_Contact VARCHAR(12) NOT NULL,
+    PRIMARY KEY (R_ID)
+    );
+
+
+CREATE TABLE Customer (
+    C_ID INT NOT NULL AUTO_INCREMENT,
+    C_Name VARCHAR(45) NOT NULL,
+    C_Age INT NOT NULL,
+    C_Contact VARCHAR(12) NOT NULL,
+    C_Membership ENUM('Premium', 'Non-Premium') NOT NULL DEFAULT 'Non-Premium',
+     C_gender VARCHAR(15) NOT NULL,
+    PRIMARY KEY (C_ID)
+);
+
+
+CREATE TABLE Cust_Address (
+    C_ID INT NOT NULL,
+    Address VARCHAR(500),
+    Address_Type ENUM('Work', 'Home','Others') NOT NULL DEFAULT 'Home',
+    A_ID INT NOT NULL,
+    CONSTRAINT FK1 FOREIGN KEY (C_ID) REFERENCES Customer(C_ID)
+   );
+
+
+CREATE TABLE Cust_Payment_options (
+    C_ID INT NOT NULL,
+    payment_method VARCHAR(45),
+    card_UPI_Details VARCHAR(50),
+    CONSTRAINT FK2 FOREIGN KEY (C_ID) REFERENCES Customer(C_ID)
+);
+
+
+
+
+ CREATE TABLE Menu(
+           R_ID INT NOT NULL,
+          Item_ID INT NOT NULL,
+          Item_Name VARCHAR(100) NOT NULL,
+          Item_Price INT NOT NULL,
+          PRIMARY KEY(R_ID,Item_ID),
+          CONSTRAINT FK7 FOREIGN KEY(R_ID) REFERENCES RESTAURANT(R_ID)
+);
+
+CREATE TABLE Transaction_Details(
+           T_ID INT NOT NULL,
+           Trans_Time VARCHAR(50),
+           Amount INT NOT NULL,
+           Payment_Mode VARCHAR(25) ,
+           PRIMARY KEY(T_ID)
+);
+
+
+CREATE TABLE D_PartnerInfo(
+      D_ID INT NOT NULL,
+      D_Name VARCHAR(100) NOT NULL,
+      D_Phone VARCHAR(12) NOT NULL,
+      Vaccination_Status  VARCHAR(50) NOT NULL,
+      Native_Language VARCHAR(100) NOT NULL,
+       PRIMARY KEY(D_ID)
+);
+
+
+
+CREATE TABLE Ratings_Review(
+      O_ID INT NOT NULL,
+      D_Rating INT NOT NULL,
+      R_Rating INT NOT NULL,  
+      Review VARCHAR(800),
+   CONSTRAINT FK21 FOREIGN KEY(O_ID) REFERENCES Order1(O_ID),
+     CONSTRAINT D_RATING CHECK(D_Rating<6),
+     CONSTRAINT R_RATING CHECK(R_Rating<6)
+);
+
+describe order1;
+CREATE TABLE Order1(
+      O_ID INT NOT NULL AUTO_INCREMENT,
+      C_ID INT NOT NULL,
+      T_ID  INT NOT NULL,
+	A_ID INT NOT NULL,
+      D_ID INT NOT NULL,
+      PRIMARY KEY(O_ID),
+      CONSTRAINT FK4 FOREIGN KEY (C_ID) REFERENCES Customer(C_ID),
+     CONSTRAINT FK6 FOREIGN KEY(D_ID)  REFERENCES D_PartnerInfo(D_ID),
+CONSTRAINT FK5 FOREIGN KEY(T_ID) REFERENCES Transaction_Details(T_ID)
+);
+
+
+CREATE TABLE Order_Details (
+    O_ID INT NOT NULL,
+    item_ID INT NOT NULL,
+    R_ID INT NOT NULL,
+QUANTITY INT NOT NULL,
+  CONSTRAINT FK8 FOREIGN KEY (O_ID) REFERENCES Order1(O_ID),
+   CONSTRAINT FK10  FOREIGN KEY (R_ID) REFERENCES Menu(R_ID)
+   );
+
+show tables;
+show databases;
+select * from customer;
+
+
+select * from restaurant;
+
+select * from cust_address;
+
+select * from Cust_Payment_options;
+
+select*from d_partnerinfo;
+
+select*from transaction_details;
+
+select*from menu;
+
+select*from order1;
+
+select*from order_details;
+
+select*from ratings_review;
+
+select C_gender,avg(C_Age) AS "Avg_Age" FROM customer group by C_gender order by "Avg_Age";
+
+select C_Membership,C_gender,count(C_ID) AS "Total Cust" 
+FROM customer 
+where C_Age>25 
+group by C_Membership,C_gender
+ order by "Total Cust";
+ 
+ select C_Membership,count(C_ID) AS "Total Male Cust" from customer
+ where C_gender="M" 
+ group by C_Membership
+ order by count(C_ID) desc;
+ 
+ select Item_Name, Item_Price from menu 
+where Item_Name like "%Paneer%"
+ or Item_Name like "%Wrap%" 
+ and Item_Price>100 
+ order by Item_Price desc;
+ 
+ select R_ID,Item_Name,Item_Price from menu 
+ where R_ID IN(10,12,15) 
+ AND 
+ (Item_Price >=100 and Item_Price <=150);
+ -- (Item_Price >=100 or Item_Price <=150); 
+ 
+ 
+ select R_ID,item_ID,sum(QUANTITY) as "Total Qty sold"  from order_details
+ group by R_ID,item_ID 
+ order by "Total Qty sold" desc
+ limit 10;
+ 
+ select R_ID,item_ID,avg(QUANTITY) as "AVg Qty sold"  from order_details
+ group by R_ID,item_ID 
+ order by "AVg Qty sold" desc
+ limit 50;
+ 
+ select D_ID,count(C_ID) as "no of deliveries per day" from order1 
+ group by D_ID 
+ having count(C_ID)>2 
+ order by count(C_ID) desc ;
+ 
+ select C_ID,count(O_ID) as "Order per customer" from order1 
+ group by C_ID 
+ having count(O_ID)>3
+ order by count(O_ID) desc
+ limit 4;
+ 
+select C_ID,A_ID,count(O_ID) as "Delivery Address used by customer" from order1 
+ group by C_ID ,A_ID
+ order by C_ID,A_ID desc
+ limit 50;
+ 
+ select distinct Address,count(C_ID) as "Total no of Customer" from cust_address 
+group by Address
+ order by count(C_ID) desc;
+ 
+select * from cust_payment_options;
+select distinct count(C_ID),payment_method 
+FROM cust_payment_options
+ group by payment_method 
+ order by count(C_ID) desc;
+ 
+ UPDATE menu
+SET Item_Price = 100+(Item_Price)
+WHERE Item_Price<100;
+select item_Name,item_Price from menu;
+
+
+INSERT INTO menu (R_ID,Item_ID,Item_Name,Item_Price)
+VALUES (14,6,"Chiken pakoda",145),(15,6,"Chiken sweet corn soup",120);
+select * from menu;
+select * from restaurant; 
+
+select * from restaurant r  join menu m on r.R_ID=m.R_ID;
+
+
+select C_Name,C_gender,C_Membership,O.T_ID,td.Amount from 
+customer c join order1 o on c.C_ID=o.C_ID JOIN  transaction_details td ON o.T_ID=td.T_ID
+order by td.Amount desc;
+
+select C_Name,C_gender,C_Membership,o.C_ID,D_Name ,Vaccination_Status from
+ customer c left join order1 o on c.C_ID=o.C_ID join d_partnerinfo df on df.D_ID=o.D_ID
+order by C_Name desc;
+
+select D_Name,Native_Language,D_Rating,Review from d_partnerinfo df 
+join order1 o on df.D_ID=o.D_ID 
+join ratings_review rr on o.O_ID=rr.O_ID
+order by D_Rating desc;
+
+select * from customer c
+ join cust_address cd on c.C_ID=cd.C_ID join cust_payment_options CP on CP.C_ID=cd.C_ID
+order by c.C_ID ;
+
+select C_Name,C_gender,C_Membership,O.T_ID,avg(Amount) as "Avg money spent" from 
+customer c join order1 o on c.C_ID=o.C_ID JOIN  transaction_details td ON o.T_ID=td.T_ID
+where C_gender="M"
+group by C_Name having avg(Amount)>500
+order by avg(Amount) desc;
+
+select D_Name,Native_Language,avg(D_Rating) as"Avg Delivery rating",Review from d_partnerinfo df 
+join order1 o on df.D_ID=o.D_ID 
+join ratings_review rr on o.O_ID=rr.O_ID
+group by D_Name
+having avg(D_Rating)>2.5
+order by avg(D_Rating) desc;
+
+select R_Name,count(Item_Name),avg(Item_Price) from restaurant r 
+join menu m 
+on r.R_ID=m.R_ID
+group by R_Name
+having avg(Item_Price)>100
+order by count(Item_Name) desc;
+
+select Item_Name,(m.Item_Price*od.QUANTITY) as "Total Cost" from order_details od join menu m on (od.R_ID=m.R_ID AND od.item_Id=m.item_Id)
+group by Item_Name
+order by (m.Item_Price*od.QUANTITY) desc
+limit 10;
+ 
+ select Item_Name,((m.Item_Price*od.QUANTITY)-Amount) "Total profit per product" from  menu m join
+ order_details od on (od.R_ID=m.R_ID AND od.item_Id=m.item_Id)
+join  order1 o on o.O_ID=od.O_ID JOIN transaction_details td on td.T_ID=o.T_ID
+group by Item_Name
+order by  ((m.Item_Price*od.QUANTITY)-Amount) desc
+limit 10;
+
+select C_Name,Amount from customer c join order1 o on c.C_ID=o.C_ID JOIN 
+transaction_details td ON o.T_ID=td.T_ID
+where Amount >(select avg(Amount) from transaction_details)
+order by Amount desc 
+limit 10;
+
+
+select a.Item_Name ,a.Item_Price, rank() over(order by a.Item_Price desc) 
+ from (select Item_Name,Item_Price from  menu where Item_Price>150) a 
+ limit 15 ;
+ 
+ select a.R_Name,dense_rank() over(order by a.p) 
+from (select R_Name,count(Item_Name) as "P",avg(Item_Price) as "Avg" from restaurant r 
+join menu m 
+on r.R_ID=m.R_ID
+group by R_Name
+)
+ a ;
+
+select count(O_ID) from ratings_review
+where D_Rating>(select avg(R_Rating) from ratings_review);
+ 
+ select C_name from customer where C_gender="M" and  C_ID in (select C_ID from cust_address where address_type="Work" );
+
+
+
+
+
+
+
+
+
+
